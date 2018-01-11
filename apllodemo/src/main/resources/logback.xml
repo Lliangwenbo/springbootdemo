@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration>
+
+<configuration debug="false">
+
+	<substitutionProperty name="log.base" value="log/" />
+	<!--控制台输出日志  -->
+	<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>
+				[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] %X{trace_id} [%-5level] %logger %msg %n
+			</Pattern>
+		</layout>
+	</appender>
+	<!-- 输出日志到log文件 -->
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		 <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder" />
+		<File>${log.base}/mc-admin.log</File>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<FileNamePattern>${log.base}/admin-%d{yyyy-MM-dd}/mc-admin-%i.log</FileNamePattern><!--  每天生产日志的名称-->
+			<TimeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<MaxFileSize>10MB</MaxFileSize>
+			</TimeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] %X{trace_id} [%-5level] %logger %msg %n</pattern>
+		</layout>
+	</appender>
+	<!-- 异步输出 -->  
+     <appender name ="ASYNC" class= "ch.qos.logback.classic.AsyncAppender">  
+            <!-- 不丢失日志.默认的,如果队列的80%已满,则会丢弃TRACT、DEBUG、INFO级别的日志 -->  
+            <discardingThreshold >0</discardingThreshold>  
+            <!-- 更改默认的队列的深度,该值会影响性能.默认值为256 -->  
+            <queueSize>512</queueSize>  
+            <!-- 添加附加的appender,最多只能添加一个 -->  
+         	<appender-ref ref ="FILE"/>  
+     </appender> 
+     <!--Mapper.xml中sql输出  -->
+ 	<logger name="com.feeling.mapper" level="debug" additivity="false">
+          <appender-ref ref="CONSOLE" />
+    </logger>
+    
+	<!-- 把日志输出到Logstash，elk管理日志时使用 -->
+	<appender name="STASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>192.168.80.148:4569</destination>
+
+        <encoder charset="UTF-8" class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+	
+	<!-- 日志打印level以及都输出到什么平台 -->
+	<root>
+		<level value="INFO" />
+		<!--控制台输出日志  -->
+		<appender-ref ref="CONSOLE" />
+		<appender-ref ref="FILE" />
+		<appender-ref ref="STASH" />
+	</root>
+
+</configuration>
